@@ -21,8 +21,8 @@ from config import *
 from utils import *
 import shutil
 
-model_path = 'checkpoints/model_21_0.5912.pth'
 config = Config()
+model_path = config.predict_model_path
 IMAGE_SIZE = config.IMAGE_SIZE
 is_cuda = True
 DEVICE = torch.device('cuda' if torch.cuda.is_available() and is_cuda else 'cpu')
@@ -39,11 +39,12 @@ else:
 #train_dataset = Person_Dataset(data_dir=config.data_dir, phase='train', transformer=transformers['val'])
 #dataloaders['train'] = DataLoader(train_dataset, shuffle=False, batch_size=batch_size)
 
-imgs = glob('datasets/train/*/*.jpg')
+#imgs = glob('/home2/kgu/101_ObjectCategories_siam/train/*/*.jpg')
+imgs = glob(config.data_dir + '/train/*/*.jpg')
 norm = transforms.Normalize((0.5), (0.5))
 out_list = []
 idx = -1
-class_list = sorted([f.split('/')[-1] for f in glob('datasets/train/*')])
+class_list = sorted([f.split('/')[-1] for f in glob(config.data_dir + '/train/*')])
 for i in range(len(class_list)):
     out_list.append([])
 from tqdm import tqdm
@@ -63,9 +64,7 @@ for img in tqdm(imgs):
     out = model(data)
     out = out.detach().cpu()#.numpy()
     out_list[class_list.index(img.split('/')[-2])].append(out)
-    #if idx > 100:
-    #    break
-#output = torch.cat(out_list, 1)
+
 output = out_list
 new_out_list = []
 for out in out_list:
@@ -81,7 +80,7 @@ for cls in class_list:
         shutil.rmtree(os.path.join('pred_result', cls))
     os.makedirs(os.path.join('pred_result', cls))
 
-PREDICT_PATH = "/home/kgu/tmp4/datasets/merge"
+PREDICT_PATH = config.predict_path 
 pred_imgs = glob(PREDICT_PATH + '/*.jpg')
 for img in tqdm(pred_imgs):
     i = cv2.imread(img)
